@@ -8,8 +8,10 @@ I wrote this for using together with [node-couchdb-min](http://github.com/rsms/n
 
 ## Prototype
 
-    Object.merge(Object origin, Object versionA, Object versionB,
-      Bool shallow | Object base) -> Object
+```javascript
+Object.merge(Object origin, Object versionA, Object versionB,
+  Bool shallow | Object base) -> Object
+```
 
 - `origin`: Ancestor version from which both `versionA` and `versionB` is derived.
 
@@ -26,21 +28,23 @@ I wrote this for using together with [node-couchdb-min](http://github.com/rsms/n
 
 `Object.merge` returns a structure which looks like this:
 
-    { merged: 
-       { key1: 123
-       , key2: 'john doe'
-       , key3: [ 'abc', 'ooo', 'xyz' ]
-       }
-    , added: 
-       { a: { key1: 789 }
-       , b: { key1: 123, key2: 'john doe' }
-       }
-    , updated: 
-       { a: { key3: [ 'abc', 'd,ef', 'xyz' ] }
-       , b: {}
-       }
-    , conflicts: { key1: { a: 789, o: 4, b: 123 } }
-    }
+```javascript
+{ merged: 
+   { key1: 123
+   , key2: 'john doe'
+   , key3: [ 'abc', 'ooo', 'xyz' ]
+   }
+, added: 
+   { a: { key1: 789 }
+   , b: { key1: 123, key2: 'john doe' }
+   }
+, updated: 
+   { a: { key3: [ 'abc', 'd,ef', 'xyz' ] }
+   , b: {}
+   }
+, conflicts: { key1: { a: 789, o: 4, b: 123 } }
+}
+```
 
 - The `merged` key contains "version 4" and is the merged result.
 
@@ -57,86 +61,90 @@ I wrote this for using together with [node-couchdb-min](http://github.com/rsms/n
 
 Unless `Object.merge` is called with a fourth argument with the constant `true`, conflict resolution is recursive for deep conflicts. In this case complex values (array, object) in the conflict structure will -- instead of the different values, be yet another `conflicts` structure. It might look like this:
 
+```javascript
+conflicts: {
+  // Simple conflict:
+  age: { 
+    a: 12,  b: 13
+  },
+  // Conflict originates deep into a complex value:
+  following: {
     conflicts: {
-      // Simple conflict:
-      age: { 
-        a: 12,  b: 13
-      },
-      // Conflict originates deep into a complex value:
-      following: {
-        conflicts: {
-          // Member 'threeLetters' of the "conflicts" object is the source:
-          'threeLetters': {
-            a: 'xyz',  o: 'def',  b: 'ooo'
-          }
-        }
+      // Member 'threeLetters' of the "conflicts" object is the source:
+      'threeLetters': {
+        a: 'xyz',  o: 'def',  b: 'ooo'
       }
     }
+  }
+}
+```
 
 
 ## Example:
 
-    // The original version which both A and B are derived from.
-    origin = {
-      name:'rsms', 
-      following:['abc', 'd,ef'],
-      modified:12345678,
-      aliases:{'abc':'Abc'}
-    }
-    // Version A
-    A = {
-      age:12, 
-      location:'sto', 
-      sex:'m', 
-      name:'rsms', 
-      modified:12345679,
-      following:['abc', 'cat', 'xyz'],
-      aliases:{'abc':'Abc', 'def':'Def'}
-    }
-    // Version B
-    B = {
-      age:13, 
-      name:'rsms', 
-      sex:'m', 
-      following:['abc', 'ooo'], 
-      modified:12345679, 
-      aliases:{'abc':'Abc', 'aab':'Aab'}
-    }
+```javascript
+// The original version which both A and B are derived from.
+origin = {
+  name:'rsms', 
+  following:['abc', 'd,ef'],
+  modified:12345678,
+  aliases:{'abc':'Abc'}
+}
+// Version A
+A = {
+  age:12, 
+  location:'sto', 
+  sex:'m', 
+  name:'rsms', 
+  modified:12345679,
+  following:['abc', 'cat', 'xyz'],
+  aliases:{'abc':'Abc', 'def':'Def'}
+}
+// Version B
+B = {
+  age:13, 
+  name:'rsms', 
+  sex:'m', 
+  following:['abc', 'ooo'], 
+  modified:12345679, 
+  aliases:{'abc':'Abc', 'aab':'Aab'}
+}
 
-    result = Object.merge(origin, A, B);
-    sys.puts('-->\n'+sys.inspect(result, false, 10));
+result = Object.merge(origin, A, B);
+sys.puts('-->\n'+sys.inspect(result, false, 10));
 
-    -->
-    { merged: 
-       { age: 13
-       , name: 'rsms'
-       , sex: 'm'
-       , following: [ 'abc', 'ooo', 'xyz' ]
-       , modified: 12345679
-       , aliases: { abc: 'Abc', aab: 'Aab', def: 'Def' }
-       , location: 'sto'
-       }
-    , added: 
-       { a: { age: 12, location: 'sto', sex: 'm' }
-       , b: { age: 13, sex: 'm' }
-       }
-    , updated: 
-       { a: 
-          { modified: 12345679
-          , following: [ 'abc', 'cat', 'xyz' ]
-          , aliases: { abc: 'Abc', def: 'Def' }
-          }
-       , b: 
-          { following: [ 'abc', 'ooo' ]
-          , modified: 12345679
-          , aliases: { abc: 'Abc', aab: 'Aab' }
-          }
-       }
-    , conflicts: 
-       { age: { a: 12, b: 13 }
-       , following: { conflicts: { '1': { a: 'cat', o: 'd,ef', b: 'ooo' } } }
-       }
-    }
+-->
+{ merged: 
+   { age: 13
+   , name: 'rsms'
+   , sex: 'm'
+   , following: [ 'abc', 'ooo', 'xyz' ]
+   , modified: 12345679
+   , aliases: { abc: 'Abc', aab: 'Aab', def: 'Def' }
+   , location: 'sto'
+   }
+, added: 
+   { a: { age: 12, location: 'sto', sex: 'm' }
+   , b: { age: 13, sex: 'm' }
+   }
+, updated: 
+   { a: 
+      { modified: 12345679
+      , following: [ 'abc', 'cat', 'xyz' ]
+      , aliases: { abc: 'Abc', def: 'Def' }
+      }
+   , b: 
+      { following: [ 'abc', 'ooo' ]
+      , modified: 12345679
+      , aliases: { abc: 'Abc', aab: 'Aab' }
+      }
+   }
+, conflicts: 
+   { age: { a: 12, b: 13 }
+   , following: { conflicts: { '1': { a: 'cat', o: 'd,ef', b: 'ooo' } } }
+   }
+}
+```
 
 ## Requirements
 
